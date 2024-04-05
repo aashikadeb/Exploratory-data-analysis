@@ -1,0 +1,184 @@
+---
+title: "Assignment 3 Music therapy"
+author: "Ashika Deb(439), Neha Agarwal(440), Pushpa Chhetri(419)"
+date: "14/01/2023"
+output: pdf_document
+---
+
+### Question:
+
+The dataset aims to identify what, if any, associations exist between an individual's music taste and their self-reported mental health. Keeping the above objective in mind, frame 6 questions, along with their solutions (diagrams and relevant measures), that deems fit.
+
+```{r}
+library(tidyverse);
+library(ggplot2);
+library(tidyr);
+library(dplyr);
+library(data.table);
+library(gridExtra);
+music=read.csv("Music Therapy.csv")
+music=na.omit(music)
+head(music)
+```
+### Understanding the data
+
+The Music Therapy dataset contains the following variables :
+Block 1: Background
+Respondents answer generic questions focused on musical background and listening habits.
+Block 2: Music genres
+Respondents rank how often they listen to 16 music genres, where they can select:
+o	Never
+o	Rarely
+o	Sometimes
+o	Very frequently
+Block 3: Mental health
+Respondents rank Anxiety, Depression, Insomnia, and OCD on a scale of 0 to 10, where:
+o	0 - I do not experience this.
+o	10 - I experience this regularly, constantly/or to an extreme.
+
+```{r}
+names(music)
+summary(music)
+```
+### Question 1:
+Find out popularity of different streaming platforms.
+```{r}
+platform <- music%>%
+filter(Primary.streaming.service != "") %>%
+group_by(Primary.streaming.service)%>%
+summarize(users = n())%>%
+arrange(desc(users))
+
+platf<-as.data.table(platform, TRUE)
+print(platf)
+
+ggplot ((data = platform), aes(x = Primary.streaming.service, y = users)) + geom_col(fill = 'cyan4',width=0.5) + 
+  labs(title = "Streaming Platforms by Popularity")+ 
+  xlab("Streaming Platforms") + 
+  theme(axis.text.x= element_text(size =10, angle = 90))
+
+```
+### Observation: 
+From the table and graph above, we can see that Spotify is the most popular streaming service whereas Pandora is the least popular, while some people(56) do not use any streaming platform at all.
+
+### Question 2: 
+Check if any relationship exists between Age and Hours of music listened to daily
+```{r}
+ggplot(data = music, aes( x = Age, y = Hours.per.day)) + 
+  geom_smooth (method = 'lm', colour = "red")+
+  labs(title='Age vs. Hours Listening to Music')+ 
+  ylab("Hours Listening to Music")+xlab("Age")
+```
+### Observation:
+As age increases, hours spent per day listening to music decreases.
+
+### Question 3:
+Analyse Genre preference and relate it to age.
+
+```{r}
+genre <- music%>%
+group_by(Fav.genre)%>%
+summarize(number = n())%>%
+arrange(desc(number))
+gen<-as.data.table(genre, TRUE)
+print(gen)
+ggplot(data = music, aes(x=Age,y=Fav.genre)) + 
+  geom_point(colour = "blue")+ 
+  labs(title = "Genres and age groups")+ 
+  xlab("Age groups")+ylab("Genres")
+```
+### Observations:
+From the table above, clearly Rock is the most popular genre whereas Latin is the least popular. The graph shows genre distribution according to age. For every genre, we see that number of listeners decreases with age. For rock, there are more listeners in the older age group(50+) as compared to other genres. 
+
+### Question 4: 
+Show how each kind of mental illness dominates the age groups.
+
+```{r}
+dis1=ggplot(data = music, aes(x = Age, y = Depression)) + 
+  geom_smooth(colour = "red") + 
+  labs(title = "Age distribition: Depression")
+dis2=ggplot(data = music, aes(x = Age, y = Anxiety)) + 
+  geom_smooth(colour = "yellow") + 
+  labs(title = "Age distribition: Anxiety")
+dis3=ggplot(data = music, aes(x = Age, y = Insomnia)) + 
+  geom_smooth(colour = "blue") + 
+  labs(title = "Age distribition: Insomnia")
+dis4=ggplot(data = music, aes(x = Age, y = OCD)) + 
+  geom_smooth(colour = "green") + 
+  labs(title = "Age distribition: OCD")
+
+g1=grid.arrange(dis1+theme(legend.position = "none"), 
+                dis2+theme(legend.position = "none"),
+                nrow = 1,
+                top ="Distribution of different mentall illnesses across ages")
+g2=grid.arrange(dis3+theme(legend.position = "none"),
+                dis4+theme(legend.position = "none"), 
+                nrow = 1)
+grid.arrange(g1,g2,
+                ncol = 1,
+                top ="At a glance")
+```
+### Observations:
+In case of depression, people in their 20s experience it the most. Teenagers experience higher levels of Anxiety. Insomnia is more prominent in middle-aged and older people. Similarly, OCD is less prominent in younger people, more consistently visible in older people.
+
+### Question 5:
+Analyse the effect of music on the mental conditions.
+
+```{r}
+sub1 <- subset(music, select = c(Fav.genre, Anxiety, Music.effects))%>%
+filter(Music.effects != "") %>%
+filter(Anxiety > 0)
+sub2 <- subset(music, select = c(Fav.genre, Depression, Music.effects))%>%
+filter(Music.effects != "") %>%
+filter(Depression > 0)
+sub3 <- subset(music, select = c(Fav.genre, Insomnia, Music.effects))%>%
+filter(Music.effects != "") %>%
+filter(Insomnia > 0)
+sub4 <- subset(music, select = c(Fav.genre, OCD, Music.effects))%>%
+filter(Music.effects != "") %>%
+filter(OCD > 0)
+
+p1=ggplot(sub1, aes(x = Fav.genre, fill = Music.effects)) + geom_bar(position="dodge") + 
+  labs(title = "Music effect on Anxiety") + xlab("Fav Genre") + theme(axis.text.x= element_text(size =5, angle = 90)) + scale_fill_manual(breaks =c("Improve","No effect","Worsen"),values=c("Darkgreen", "Yellow", "Red"))
+p2=ggplot(sub2, aes(x = Fav.genre, fill = Music.effects)) + geom_bar(position="dodge") + 
+  labs(title = "Music effect on Depression") + xlab("Fav Genre") + theme(axis.text.x= element_text(size =5, angle = 90)) + scale_fill_manual(breaks =c("Improve","No effect","Worsen"),values=c("Darkgreen", "Yellow", "Red"))
+p3=ggplot(sub3, aes(x = Fav.genre, fill = Music.effects)) + geom_bar(position="dodge") + 
+  labs(title = "Music effect on Insomnia") + xlab("Fav Genre") + theme(axis.text.x= element_text(size =5, angle = 90)) + scale_fill_manual(breaks =c("Improve","No effect","Worsen"),values=c("Darkgreen", "Yellow", "Red"))
+p4=ggplot(sub4, aes(x = Fav.genre, fill = Music.effects)) + geom_bar(position="dodge") + 
+  labs(title = "Music effect on OCD") + xlab("Fav Genre") + theme(axis.text.x= element_text(size =5, angle = 90))+ scale_fill_manual(breaks =c("Improve","No effect","Worsen"),values=c("Darkgreen", "Yellow", "Red"))
+
+g1=grid.arrange(p1+theme(legend.position = "none"),
+                p2+theme(legend.position = "bottom"),
+                nrow = 1,
+                top ="Panel 1")
+g2=grid.arrange(p3+theme(legend.position = "none"),
+                p4+theme(legend.position = "bottom"), 
+                nrow = 1,
+                top ="Panel 2")
+
+
+```
+### Observations:
+People with Anxiety who listened to Latin, Lofi and Gospel, reported improved conditions only.
+People with Depression who listened to Lofi and Gospel, reported improved conditions only.
+People with Insomnia who listened to Lofi and Gospel, reported improved conditions only.
+People with OCD who listened to Lofi and Gospel, reported improved conditions only.
+From the above results, we can conclude that Gospel and Lofi have poistive effect on people with these mental illnesses and Latin also helps sometimes. 
+
+
+### Question 6
+How do the hours per day spent listening to music affect mental health?
+
+```{r}
+ggplot(data=music, aes(x=Hours.per.day, fill=Music.effects))+
+  geom_bar(position="stack",width=0.8)+
+  ylab('Number of Participants')+
+  labs(title='Mental Health Effects vs. Hours Listening to Music')+ xlab("Hours Listening to Music")+ylab("Mental Health Effects")+scale_fill_brewer(palette="Purples")+
+  theme(text = element_text(size = 10))
+```
+### Observations:
+Worsening mental health symptoms are mostly due to listening between 0-6 hours per day.
+
+
+### Conclusions:
+Listening to music is more popular among teenagers and middle-aged people who prefer different genres ranging from Rock to Lofi to K-Pop however Rock is appealing to even the older generation and is the most popular genre. Mental illnesses are mostly prominent in the midrange of age groups and we can see improvement in mental health by listening to lofi, or gospel. Even the time spent listening to music shows that long hours affect mental health poorly.

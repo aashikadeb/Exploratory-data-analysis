@@ -1,0 +1,144 @@
+
+The "Penguins" dataset gives information on different species of penguins found in different islands of the Palmer Archipelago in Antarctica. The first row of the file contains self explanatory names of the different variables. We download the dataset and perform the following operations on it to answer the given questions:
+```{r}
+library(tidyverse);
+library(ggplot2);
+library(tidyr);
+library(dplyr);
+library(data.table);
+penguins=read.csv("Penguins.csv")
+penguins=na.omit(penguins)
+glimpse(penguins)
+```
+### Question 1
+Construct a suitable diagram to study if there is dominance of sex of the penguins across different species.
+
+Solution: For this we use multiple bar diagrams
+```{r}
+sub=subset(penguins, select = c(species, sex))
+sub2=subset(penguins, sex=="MALE"|sex=="FEMALE")
+ggplot(sub2, aes(x = species, fill = sex))+
+  geom_bar(position="dodge")+ 
+  labs(title = "Sex of Penguins across species")+ 
+  xlab("Species")+ 
+  theme(axis.text.x= element_text(size =10, angle = 90))
+
+```
+
+## Observation:
+From the graphs above and the table below, we can see that for "Adelie" species frequency of male and female species is the same, i.e, the ratio is 1:1(73:73). Hence there is no sex dominance in this species. For "Chinstrap" species, similarly, there is no sex dominance as the frequencies here are same too (34). However, for "Gentoo" species we can see that females (58) are less in number than males (61), hence it can be said that there is a male dominance in the "Gentoo" species.
+
+```{r}
+num<-penguins%>%count(sex,species)
+num<-as.data.table(num, TRUE)
+print(num)
+```
+### Question 2:
+Using diagrams and measures, as you find suitable, make a detailed study of the body mass of the penguins.
+
+Solution:
+To proceed with this question, we must know the following variables given to us:
+
+"culmen_length_mm" a number denoting culmen length (millimeters)
+
+"culmen_depth_mm" a number denoting culmen depth (millimeters)
+
+"flipper_length_mm" an integer denoting flipper length (millimeters)
+
+"body_mass_g" an integer denoting body mass (grams)
+
+In the following scatter plots, we’ll try to visualize relationship between flipper_length_mm, culmen_length_mm and culmen_depth_mm and body_mass_g, respectively, with respect to each species.
+```{r}
+library(tidyverse)
+ggplot(data = penguins, 
+                       aes(x = flipper_length_mm,
+                           y = body_mass_g)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 1,
+             alpha = 0.5) +
+  #theme_minimal() +
+  scale_color_manual(values = c("red","blue","green")) +
+  labs(title = "Relation between penguin's body mass and flipper length",
+       subtitle = "Flipper length and body mass for Adelie, 
+       Chinstrap and Gentoo Penguins",
+       x = "Flipper length (mm)",
+       y = "Body mass (g)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme_minimal()
+```
+Penguin flipper length and body mass show a positive association for each of the 3 species
+
+
+```{r}
+ggplot(data = penguins, 
+                       aes(x = culmen_length_mm,
+                           y = body_mass_g)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 1,
+             alpha = 0.5) +
+  #theme_minimal() +
+  scale_color_manual(values = c("red","blue","green")) +
+  labs(title = "Relation between penguin's body mass and culmen length",
+       subtitle = "Culmen length and body mass for Adelie, 
+       Chinstrap and Gentoo Penguins",
+       x = "Culmen length (mm)",
+       y = "Body mass (g)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme_minimal()
+```
+There is some moderate correlation between Penguin body mass and culmen length across species
+
+
+```{r}
+ggplot(data = penguins, 
+                       aes(x = culmen_depth_mm,
+                           y = body_mass_g)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 1,
+             alpha = 0.5) +
+  #theme_minimal() +
+  scale_color_manual(values = c("red","blue","green")) +
+  labs(title = "Relation between penguin's body mass and culmen depth",
+       subtitle = "culmen depth and body mass for Adelie, 
+       Chinstrap and Gentoo Penguins",
+       x = "culmen depth (mm)",
+       y = "Body mass (g)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme_minimal()
+```
+There is very little correlation between penguin body mass and culmen depth across species
+
+
+```{r}
+sub=subset(penguins, sex=="MALE"|sex=="FEMALE")
+ggplot(sub,aes(y=body_mass_g))+geom_boxplot(aes(fill=species))+ labs(title = "Boxplot of body masses of the 3 species")
+```
+"Gentoo" penguins are heavier and show greatest variation compared to the other two apecies. Least variation in "Chinstrap"
+Some penguins of "Chinstrap" species show unusual body mass(outliers).
+
+### Question 3: 
+Apart from the above two questions, frame one problem, along with its solution (diagrams and measures), that seems interesting/relevant to you in studying this dataset. 
+
+Solution: Q: Find species dominance in the islands using appropriate graphs
+```{r}
+tab<-sub2%>%group_by(island,species)%>%summarize(freq=n())
+tab<-as.data.table(tab, TRUE)
+print(tab)
+
+cp=coord_polar("y")
+cp$is_free=function() TRUE
+ggplot(sub2,aes(x="",y=species,fill=species))+
+  geom_bar(stat="identity")+
+  cp+facet_wrap(~island,scales="free") +
+  scale_fill_brewer(palette="Reds")+
+  theme_minimal()
+
+```
+### Observation:
+From the Pie charts and tables above, we can see that Biscoe has an excess of Gentoo(119) as compared to Adelie(44) and Chinstrap is missing. Dream has an excess of Chinstrap(68) as compared to Adelie(55) and Gentoo is missing. Torgersen has only Adelie(47). Therefore, we can say, that overall, Adelie species dominates in all three islands.
