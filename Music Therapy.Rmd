@@ -1,10 +1,3 @@
----
-title: "Assignment 3 Music therapy"
-author: "Ashika Deb(439), Neha Agarwal(440), Pushpa Chhetri(419)"
-date: "14/01/2023"
-output: pdf_document
----
-
 ### Question:
 
 The dataset aims to identify what, if any, associations exist between an individual's music taste and their self-reported mental health. Keeping the above objective in mind, frame 6 questions, along with their solutions (diagrams and relevant measures), that deems fit.
